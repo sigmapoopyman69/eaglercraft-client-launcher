@@ -1,0 +1,1006 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#080d0a">
+<title>Ebert Launcher</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg: #080d0a;
+  --panel: #0d1711;
+  --panel-hover: #122219;
+  --border: #20372a;
+  --green: #65f5a1;
+  --green-dark: #27bd70;
+  --red: #ff526f;
+  --text: #eff8f1;
+  --muted: #859b8c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text);
+  background:
+    radial-gradient(ellipse at 85% 0%, #153021 0%, transparent 35%),
+    radial-gradient(ellipse at 0% 100%, #102619 0%, transparent 30%),
+    var(--bg);
+  font-family: 'DM Sans', sans-serif;
+}
+
+button, input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.app {
+  max-width: 1500px;
+  min-height: 100vh;
+  margin: auto;
+  padding: 0 38px;
+}
+
+header {
+  min-height: 91px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.logo {
+  width: 45px;
+  height: 45px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  color: #07110a;
+  font-size: 27px;
+  background: linear-gradient(145deg, #ff7788, var(--red));
+  box-shadow: inset 0 -4px #bd304a, 0 0 25px #ff526f18;
+}
+
+.brand h1 {
+  margin: 0;
+  font: 700 21px 'Space Grotesk', sans-serif;
+  letter-spacing: -.7px;
+}
+
+.brand h1 span {
+  color: var(--green);
+}
+
+.brand small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 9px;
+  letter-spacing: 2.5px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #a7bcad;
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 10px var(--green);
+}
+
+.badge {
+  margin-left: 12px;
+  padding: 8px 11px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  color: var(--green);
+  background: var(--panel);
+  letter-spacing: 0;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 205px minmax(0, 1fr);
+  gap: 30px;
+  padding-top: 27px;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.side-heading, .eyebrow {
+  color: #789783;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.side-heading {
+  padding: 8px 12px 13px;
+}
+
+.nav-button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 13px;
+  color: #93a89a;
+  text-align: left;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: transparent;
+  transition: .2s;
+}
+
+.nav-button span {
+  width: 22px;
+  text-align: center;
+  font-size: 19px;
+}
+
+.nav-button:hover {
+  color: white;
+  background: var(--panel);
+}
+
+.nav-button.active {
+  color: var(--green);
+  border-color: #27553a;
+  background: linear-gradient(90deg, #133321, #0d1911);
+  box-shadow: inset 2px 0 var(--green);
+}
+
+.sidebar-note {
+  margin-top: auto;
+  padding: 15px;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: linear-gradient(145deg, #12251a, #0b120d);
+}
+
+.sidebar-note strong {
+  font-size: 12px;
+}
+
+.sidebar-note p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+main {
+  min-width: 0;
+}
+
+.hero {
+  position: relative;
+  min-height: 245px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  padding: 30px;
+  border: 1px solid #294834;
+  border-radius: 19px;
+  background: linear-gradient(110deg, #12281a, #0b1710 72%);
+}
+
+.hero:after {
+  content: "";
+  position: absolute;
+  width: 240px;
+  height: 240px;
+  top: -100px;
+  right: -60px;
+  border: 1px solid #356443;
+  border-radius: 50%;
+  box-shadow: 0 0 0 25px #21472c30, 0 0 0 55px #21472c20;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--green);
+}
+
+.eyebrow:before {
+  content: "";
+  width: 20px;
+  height: 1px;
+  background: var(--green);
+}
+
+.hero h2 {
+  margin: 17px 0 11px;
+  font: 600 clamp(32px, 4vw, 46px)/1.1 'Space Grotesk', sans-serif;
+  letter-spacing: -1.8px;
+}
+
+.hero h2 span {
+  color: var(--green);
+}
+
+.hero p {
+  color: #9eb3a4;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.watermelon {
+  position: absolute;
+  right: 13%;
+  top: 65px;
+  width: 105px;
+  height: 105px;
+  border: 8px solid #27834a;
+  border-radius: 50%;
+  background: repeating-linear-gradient(110deg, #ff526f 0 18px, #ff7184 18px 32px);
+  box-shadow: inset 0 0 0 4px #ff9ba8, 0 0 40px #30d87915;
+  transform: rotate(-25deg);
+}
+
+.watermelon:before {
+  content: "•  •";
+  position: absolute;
+  top: 22px;
+  left: 22px;
+  color: #142018;
+  font-size: 18px;
+  line-height: 30px;
+  text-shadow: 9px 24px #142018;
+}
+
+.hero-footer {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 13px 20px;
+  border-top: 1px solid #25402e;
+  color: #819988;
+  background: #0b1710c9;
+  font-size: 9px;
+  letter-spacing: 1px;
+}
+
+.toolbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 15px;
+  margin: 32px 0 18px;
+}
+
+.toolbar h2 {
+  margin: 8px 0 0;
+  font: 600 21px 'Space Grotesk', sans-serif;
+  letter-spacing: -.5px;
+}
+
+.count {
+  display: inline-block;
+  margin-left: 5px;
+  padding: 4px 7px;
+  border: 1px solid #28573a;
+  border-radius: 6px;
+  color: var(--green);
+  background: #14301e;
+  font: 600 10px 'DM Sans', sans-serif;
+  vertical-align: middle;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 245px;
+  height: 40px;
+  padding: 0 11px;
+  border: 1px solid #293e30;
+  border-radius: 10px;
+  color: var(--muted);
+  background: #0a120d;
+}
+
+.search:focus-within {
+  border-color: var(--green-dark);
+}
+
+.search span {
+  font-size: 20px;
+}
+
+.search input {
+  width: 100%;
+  min-width: 0;
+  outline: none;
+  border: none;
+  color: var(--text);
+  background: transparent;
+  font-size: 12px;
+}
+
+.search input::placeholder {
+  color: #708576;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 13px;
+}
+
+.card {
+  min-width: 0;
+  padding: 17px;
+  border: 1px solid #203529;
+  border-radius: 14px;
+  background: linear-gradient(145deg, #0e1912, #09100c);
+  transition: .2s;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  border-color: #36734b;
+  background: linear-gradient(145deg, #122319, #0b140e);
+}
+
+.card-top {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 17px;
+}
+
+.client-icon {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 43px;
+  height: 43px;
+  border: 1px solid #31543b;
+  border-radius: 11px;
+  color: var(--green);
+  background: #142a1a;
+  font-size: 20px;
+}
+
+.client-info {
+  min-width: 0;
+}
+
+.client-name {
+  overflow: hidden;
+  color: #eef7f0;
+  font-size: 12px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.client-version {
+  margin-top: 5px;
+  color: #859b8c;
+  font-size: 10px;
+}
+
+.description {
+  min-height: 30px;
+  margin: -5px 0 14px;
+  color: #8fa495;
+  font-size: 11px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.launch {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #37c878;
+  border-radius: 9px;
+  color: #76f5a6;
+  background: #10281a;
+  font-size: 11px;
+  font-weight: 700;
+  transition: .2s;
+}
+
+.launch:hover {
+  color: #07110a;
+  background: var(--green);
+  box-shadow: 0 0 20px #65f5a122;
+}
+
+.launch span {
+  margin-right: 7px;
+}
+
+.message {
+  grid-column: 1 / -1;
+  padding: 35px 20px;
+  border: 1px dashed #2a4331;
+  border-radius: 14px;
+  color: var(--muted);
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.message strong {
+  color: var(--text);
+}
+
+.message code {
+  color: var(--green);
+}
+
+.spinner {
+  width: 22px;
+  height: 22px;
+  margin: 0 auto 12px;
+  border: 2px solid #284332;
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 35px;
+  padding: 18px 0;
+  border-top: 1px solid var(--border);
+  color: #718777;
+  font-size: 9px;
+  letter-spacing: 1px;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 1050px) {
+  .app { padding: 0 22px; }
+  .layout { grid-template-columns: 175px minmax(0, 1fr); gap: 22px; }
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .watermelon { right: 7%; opacity: .55; }
+}
+
+@media (max-width: 680px) {
+  .app { padding: 0 14px; }
+  header { min-height: 76px; }
+  .brand h1 { font-size: 17px; }
+  .header-right { font-size: 9px; }
+  .header-right .status-label { display: none; }
+  .layout { display: block; padding-top: 15px; }
+  .sidebar {
+    flex-direction: row;
+    gap: 5px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .side-heading, .sidebar-note { display: none; }
+  .nav-button { justify-content: center; gap: 5px; padding: 10px 6px; font-size: 11px; }
+  .nav-button span { width: auto; font-size: 15px; }
+  main { padding-top: 18px; }
+  .hero { min-height: 240px; padding: 22px; }
+  .watermelon { right: -25px; opacity: .23; }
+  .hero h2 { font-size: 35px; }
+  .hero p { font-size: 12px; }
+  .toolbar { align-items: stretch; flex-direction: column; }
+  .search { width: 100%; }
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+  .card { padding: 12px; }
+  .client-icon { width: 35px; height: 35px; }
+  .card-top { gap: 8px; }
+  .client-name { font-size: 11px; }
+}
+
+@media (max-width: 400px) {
+  .grid { grid-template-columns: 1fr; }
+  .hero h2 { font-size: 31px; }
+  .hero-footer { font-size: 8px; }
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+  <header>
+    <a class="brand" href="./" aria-label="Ebert Launcher home">
+      <div class="logo">◉</div>
+      <div>
+        <h1>EBERT <span>LAUNCHER</span></h1>
+        <small>YOUR CLIENT LIBRARY</small>
+      </div>
+    </a>
+
+    <div class="header-right">
+      <span class="status-dot"></span>
+      <span class="status-label">GITHUB PAGES</span>
+      <span class="badge">v1.0.0</span>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="side-heading">WORKSPACE</div>
+
+      <button class="nav-button active" data-view="home">
+        <span>⌂</span> Overview
+      </button>
+
+      <button class="nav-button" data-view="clients">
+        <span>▦</span> All Clients
+      </button>
+
+      <button class="nav-button" data-view="about">
+        <span>ⓘ</span> About
+      </button>
+
+      <div class="sidebar-note">
+        <strong>🍉 Keep it fresh.</strong>
+        <p>Your HTML clients, organized in one place.</p>
+      </div>
+    </aside>
+
+    <main>
+      <section class="hero">
+        <div class="hero-content">
+          <div class="eyebrow">THE MELON EDITION</div>
+          <h2>Launch something<br><span>fresh.</span></h2>
+          <p>Your clients, one clean interface.<br>Choose a client below to launch it.</p>
+        </div>
+
+        <div class="watermelon" aria-hidden="true"></div>
+
+        <div class="hero-footer">
+          <span>● STATIC SITE · NO BACKEND</span>
+          <span id="scan-status">CONNECTING TO GITHUB...</span>
+        </div>
+      </section>
+
+      <section id="library">
+        <div class="toolbar">
+          <div>
+            <div class="eyebrow">YOUR LIBRARY</div>
+            <h2 id="section-title">Available Clients <span class="count" id="count">0</span></h2>
+          </div>
+
+          <label class="search">
+            <span>⌕</span>
+            <input id="search" type="search" placeholder="Search clients..." autocomplete="off">
+          </label>
+        </div>
+
+        <section id="grid" class="grid" aria-live="polite">
+          <div class="message">
+            <div class="spinner"></div>
+            Connecting to your GitHub repository...
+          </div>
+        </section>
+      </section>
+
+      <section id="about" class="message" hidden>
+        <div class="eyebrow">ABOUT THIS PROJECT</div>
+        <h2>Simple by design.</h2>
+        Ebert Launcher discovers HTML files in your repository's clients folder
+        using the GitHub API. It runs entirely in your browser and is hosted on GitHub Pages.
+        <br><br>
+        Client versions are read from each HTML file's metadata when available.
+      </section>
+
+      <footer>
+        <span>© <span id="year"></span> EBERT LAUNCHER</span>
+        <span>🍉 BUILT FOR GITHUB PAGES</span>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<script>
+/*
+  EBERT LAUNCHER CONFIGURATION
+
+  For username.github.io/repository-name:
+  The repository is detected from the URL automatically.
+
+  For a custom domain:
+  Set REPO_OWNER and REPO_NAME below.
+
+  If your default branch isn't "main", change REPO_BRANCH.
+*/
+
+const REPO_OWNER = "";
+const REPO_NAME = "";
+const REPO_BRANCH = "main";
+const CLIENTS_FOLDER = "clients";
+
+/* ---------------- GITHUB REPOSITORY DETECTION ---------------- */
+
+function getRepositoryConfig() {
+  const hostname = location.hostname;
+  const segments = location.pathname.split("/").filter(Boolean);
+
+  let owner = REPO_OWNER;
+  let repo = REPO_NAME;
+  let siteBase = "";
+
+  if (!owner || !repo) {
+    if (hostname.endsWith(".github.io")) {
+      owner = owner || hostname.split(".")[0];
+
+      // A user/organization site uses the repository named owner.github.io.
+      // A project site uses the first URL path segment as its repository.
+      if (!repo) {
+        repo = segments.length ? segments[0] : owner + ".github.io";
+      }
+
+      siteBase = segments.length ? "/" + segments[0] : "";
+    } else {
+      throw new Error(
+        "Set REPO_OWNER and REPO_NAME in index.html when using a custom domain."
+      );
+    }
+  } else if (hostname.endsWith(".github.io")) {
+    siteBase = segments.length ? "/" + segments[0] : "";
+  }
+
+  return { owner, repo, siteBase };
+}
+
+const CONFIG = getRepositoryConfig();
+
+const API_ROOT =
+  "https://api.github.com/repos/" +
+  encodeURIComponent(CONFIG.owner) + "/" +
+  encodeURIComponent(CONFIG.repo);
+
+const CONTENTS_API =
+  API_ROOT + "/contents/" +
+  CLIENTS_FOLDER.split("/").map(encodeURIComponent).join("/") +
+  "?ref=" + encodeURIComponent(REPO_BRANCH);
+
+const RAW_ROOT =
+  "https://raw.githubusercontent.com/" +
+  encodeURIComponent(CONFIG.owner) + "/" +
+  encodeURIComponent(CONFIG.repo) + "/" +
+  encodeURIComponent(REPO_BRANCH) + "/";
+
+/* ---------------- HTML VERSION DETECTION ---------------- */
+
+function extractVersion(html) {
+  const patterns = [
+    /<meta\s+[^>]*name=["']version["'][^>]*content=["']([^"']+)["'][^>]*>/i,
+    /<meta\s+[^>]*content=["']([^"']+)["'][^>]*name=["']version["'][^>]*>/i,
+    /<meta\s+[^>]*name=["']client-version["'][^>]*content=["']([^"']+)["'][^>]*>/i,
+    /<meta\s+[^>]*content=["']([^"']+)["'][^>]*name=["']client-version["'][^>]*>/i,
+    /<[^>]+id=["']version["'][^>]*>\s*([^<]+)\s*<\/[^>]+>/i,
+    /<!--\s*version:\s*([^\s]+)\s*-->/i
+  ];
+
+  for (const pattern of patterns) {
+    const match = html.match(pattern);
+    if (match && match[1]) {
+      return match[1].trim().slice(0, 40);
+    }
+  }
+
+  return "Version unknown";
+}
+
+function extractDescription(html) {
+  const match = html.match(
+    /<meta\s+[^>]*name=["']description["'][^>]*content=["']([^"']+)["'][^>]*>/i
+  );
+
+  return match ? match[1].trim().slice(0, 150) : "HTML client";
+}
+
+/* ---------------- FETCH CLIENT FILES ---------------- */
+
+async function fetchClientMetadata(file) {
+  const rawURL = RAW_ROOT +
+    file.path.split("/").map(encodeURIComponent).join("/");
+
+  try {
+    const response = await fetch(rawURL);
+
+    if (!response.ok) {
+      return {
+        version: "Version unknown",
+        description: "HTML client"
+      };
+    }
+
+    const html = await response.text();
+
+    return {
+      version: extractVersion(html),
+      description: extractDescription(html)
+    };
+  } catch {
+    return {
+      version: "Version unknown",
+      description: "HTML client"
+    };
+  }
+}
+
+async function fetchClients() {
+  const grid = document.getElementById("grid");
+  const status = document.getElementById("scan-status");
+
+  try {
+    const response = await fetch(CONTENTS_API, {
+      headers: {
+        "Accept": "application/vnd.github+json"
+      }
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error(
+          "The clients folder or repository was not found. Check your repository name, branch, and folder."
+        );
+      }
+
+      if (response.status === 403) {
+        throw new Error(
+          "GitHub API rate limit reached or access denied. Wait a little and refresh."
+        );
+      }
+
+      throw new Error("GitHub API returned HTTP " + response.status + ".");
+    }
+
+    const files = await response.json();
+
+    if (!Array.isArray(files)) {
+      throw new Error("The clients path is not a directory.");
+    }
+
+    const htmlFiles = files.filter(file =>
+      file.type === "file" &&
+      file.name.toLowerCase().endsWith(".html")
+    );
+
+    const clients = await Promise.all(
+      htmlFiles.map(async (file, index) => {
+        const metadata = await fetchClientMetadata(file);
+
+        return {
+          name: file.name.replace(/\.html$/i, "")
+            .replace(/[-_]+/g, " ")
+            .replace(/\b\w/g, char => char.toUpperCase()),
+          path: file.path,
+          version: metadata.version,
+          description: metadata.description,
+          icon: ["◈", "✦", "◉", "◇", "✧", "⬡"][index % 6]
+        };
+      })
+    );
+
+    status.textContent = htmlFiles.length + " CLIENT" +
+      (htmlFiles.length === 1 ? "" : "S") + " DISCOVERED";
+
+    document.getElementById("count").textContent = clients.length;
+
+    renderClients(clients);
+    setupSearch(clients);
+
+  } catch (error) {
+    status.textContent = "CONNECTION ERROR";
+
+    grid.innerHTML = "";
+
+    const message = document.createElement("div");
+    message.className = "message";
+
+    const heading = document.createElement("strong");
+    heading.textContent = "Couldn't load your clients.";
+
+    const details = document.createElement("p");
+    details.textContent = error.message;
+
+    const hint = document.createElement("p");
+    hint.textContent =
+      "Check that this site is hosted from the expected GitHub repository, the clients folder exists, and the repository is public.";
+
+    const retry = document.createElement("button");
+    retry.className = "launch";
+    retry.textContent = "↻ Retry";
+    retry.style.maxWidth = "180px";
+    retry.addEventListener("click", () => {
+      grid.innerHTML =
+        '<div class="message"><div class="spinner"></div>Looking for clients...</div>';
+      fetchClients();
+    });
+
+    message.append(heading, details, hint, retry);
+    grid.append(message);
+  }
+}
+
+/* ---------------- RENDER CLIENT CARDS ---------------- */
+
+function renderClients(clients) {
+  const grid = document.getElementById("grid");
+  const query = document.getElementById("search").value
+    .trim().toLowerCase();
+
+  const filtered = clients.filter(client =>
+    (
+      client.name + " " +
+      client.version + " " +
+      client.description
+    ).toLowerCase().includes(query)
+  );
+
+  document.getElementById("count").textContent = filtered.length;
+  grid.innerHTML = "";
+
+  if (!filtered.length) {
+    const empty = document.createElement("div");
+    empty.className = "message";
+
+    const title = document.createElement("strong");
+    title.textContent = clients.length
+      ? "No matching clients"
+      : "No HTML clients found";
+
+    const explanation = document.createElement("p");
+    explanation.textContent = clients.length
+      ? "Try another search term."
+      : 'Add .html files to the repository\'s "clients" folder and refresh.';
+
+    empty.append(title, explanation);
+    grid.append(empty);
+    return;
+  }
+
+  filtered.forEach(client => {
+    const card = document.createElement("article");
+    card.className = "card";
+
+    const top = document.createElement("div");
+    top.className = "card-top";
+
+    const icon = document.createElement("div");
+    icon.className = "client-icon";
+    icon.textContent = client.icon;
+
+    const info = document.createElement("div");
+    info.className = "client-info";
+
+    const name = document.createElement("div");
+    name.className = "client-name";
+    name.textContent = client.name;
+
+    const version = document.createElement("div");
+    version.className = "client-version";
+    version.textContent = client.version;
+
+    info.append(name, version);
+    top.append(icon, info);
+
+    const description = document.createElement("p");
+    description.className = "description";
+    description.textContent = client.description;
+
+    const launch = document.createElement("button");
+    launch.className = "launch";
+    launch.innerHTML = "<span>▶</span> Launch Client";
+
+    launch.addEventListener("click", () => {
+      /*
+        Resolve the client path relative to the current GitHub Pages site.
+        Project sites include the repository prefix; user sites do not.
+      */
+      const relativePath = client.path.split("/")
+        .map(encodeURIComponent)
+        .join("/");
+
+      const target = location.origin +
+        CONFIG.siteBase + "/" + relativePath;
+
+      window.open(target, "_blank", "noopener,noreferrer");
+    });
+
+    card.append(top, description, launch);
+    grid.append(card);
+  });
+}
+
+/* ---------------- SEARCH ---------------- */
+
+function setupSearch(clients) {
+  const search = document.getElementById("search");
+
+  search.oninput = () => renderClients(clients);
+}
+
+/* ---------------- NAVIGATION ---------------- */
+
+document.querySelectorAll(".nav-button").forEach(button => {
+  button.addEventListener("click", () => {
+    document.querySelectorAll(".nav-button").forEach(item => {
+      item.classList.toggle("active", item === button);
+    });
+
+    const view = button.dataset.view;
+    const library = document.getElementById("library");
+    const about = document.getElementById("about");
+
+    library.hidden = view === "about";
+    about.hidden = view !== "about";
+
+    if (view === "clients") {
+      document.getElementById("section-title").childNodes[0].textContent =
+        "All Clients ";
+    } else if (view === "home") {
+      document.getElementById("section-title").childNodes[0].textContent =
+        "Available Clients ";
+    }
+  });
+});
+
+document.getElementById("year").textContent = new Date().getFullYear();
+
+/* ---------------- START ---------------- */
+
+fetchClients();
+</script>
+</body>
+</html>
+```
