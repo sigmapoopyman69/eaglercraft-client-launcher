@@ -1,11 +1,10 @@
 <!-- Liquidbounce Hacked Client comp'd by ebert -->
 <!DOCTYPE html>
 <html lang="en">
-<meta name="description" content="Liquidbounce 1.8.8 Hacked Client comp'd by ebert" />
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Loading Client...</title>
+    <title>loading liquidbounce</title>
     <style>
         body {
             background-color: #121212;
@@ -47,7 +46,9 @@
 <body>
 
 <div class="container">
-    <h2 id="title">Downloading into Memory...</h2>
+    <h2 id="title">compressed by ebert <br> <br> <br> 
+    loading...
+    </b></h2>
     <div class="progress-bg">
         <div class="progress-fill" id="progress-bar"></div>
     </div>
@@ -55,10 +56,11 @@
 </div>
 
 <script>
-    // Using the ://githubusercontent.com link to get the raw file directly
-    const rawUrl = "https://://githubusercontent.com/DhyeyTheEaglercrafter/LiquidBounce-For-Eaglercraft/main/index.html";
+    // Constructed in parts to prevent copy-paste URL corruption
+    const domain = "raw.githubusercontent.com";
+    const path = "/DhyeyTheEaglercrafter/LiquidBounce-For-Eaglercraft/main/index.html";
+    const rawUrl = "https://" + domain + path;
     
-    // Fallback size (18.6 MB in bytes) in case GitHub compresses the stream and hides Content-Length
     const fallbackTotalBytes = 19503513; 
 
     async function loadIntoMemory() {
@@ -67,7 +69,6 @@
         const titleText = document.getElementById('title');
 
         try {
-            // cache: "no-store" tells the browser not to save the file to the disk cache
             const response = await fetch(rawUrl, { cache: "no-store" });
             
             if (!response.ok) {
@@ -81,7 +82,6 @@
             const reader = response.body.getReader();
             const chunks = [];
 
-            // Read the file stream chunk by chunk
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
@@ -89,7 +89,6 @@
                 chunks.push(value);
                 loaded += value.length;
 
-                // Calculate progress percentage and megabytes
                 const percent = Math.min(Math.round((loaded / total) * 100), 100);
                 const mbLoaded = (loaded / (1024 * 1024)).toFixed(2);
                 
@@ -100,11 +99,9 @@
             titleText.textContent = "Launching...";
             statusText.textContent = "100% - Initializing in RAM...";
 
-            // Combine chunks in memory and decode to HTML text
             const blob = new Blob(chunks, { type: 'text/html' });
             const htmlContent = await blob.text();
 
-            // Overwrite the current page in memory with the downloaded HTML
             document.open();
             document.write(htmlContent);
             document.close();
