@@ -904,7 +904,7 @@ async function openClientInBlankTab(client) {
     // Preserve the client's original relative CSS, JS, image, and asset paths.
     const baseTag = '<base href="' + target.replace(/"/g, "&quot;") + '">';
     if (/<head\b[^>]*>/i.test(html)) {
-      html = html.replace(/<head\b[^>]*>/i, match => match + "\\n" + baseTag);
+      html = html.replace(/<head\b[^>]*>/i, match => match + "\n" + baseTag);
     } else {
       html = "<head>" + baseTag + "</head>" + html;
     }
