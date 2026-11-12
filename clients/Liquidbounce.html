@@ -1,0 +1,123 @@
+<!-- Liquidbounce Hacked Client comp'd by ebert -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading Client...</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            width: 80%;
+            max-width: 450px;
+            text-align: center;
+        }
+        .progress-bg {
+            width: 100%;
+            height: 16px;
+            background-color: #2c2c2c;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 15px 0;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+        }
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+            transition: width 0.15s ease-out;
+        }
+        #status {
+            font-size: 14px;
+            color: #a0a0a0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2 id="title">Downloading into Memory...</h2>
+    <div class="progress-bg">
+        <div class="progress-fill" id="progress-bar"></div>
+    </div>
+    <div id="status">0% (0.00 MB)</div>
+</div>
+
+<script>
+    // Using the ://githubusercontent.com link to get the raw file directly
+    const rawUrl = "https://://githubusercontent.com/DhyeyTheEaglercrafter/LiquidBounce-For-Eaglercraft/main/index.html";
+    
+    // Fallback size (18.6 MB in bytes) in case GitHub compresses the stream and hides Content-Length
+    const fallbackTotalBytes = 19503513; 
+
+    async function loadIntoMemory() {
+        const progressBar = document.getElementById('progress-bar');
+        const statusText = document.getElementById('status');
+        const titleText = document.getElementById('title');
+
+        try {
+            // cache: "no-store" tells the browser not to save the file to the disk cache
+            const response = await fetch(rawUrl, { cache: "no-store" });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            const contentLength = response.headers.get('Content-Length');
+            const total = contentLength ? parseInt(contentLength, 10) : fallbackTotalBytes;
+            let loaded = 0;
+
+            const reader = response.body.getReader();
+            const chunks = [];
+
+            // Read the file stream chunk by chunk
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                
+                chunks.push(value);
+                loaded += value.length;
+
+                // Calculate progress percentage and megabytes
+                const percent = Math.min(Math.round((loaded / total) * 100), 100);
+                const mbLoaded = (loaded / (1024 * 1024)).toFixed(2);
+                
+                progressBar.style.width = percent + '%';
+                statusText.textContent = `${percent}% (${mbLoaded} MB)`;
+            }
+
+            titleText.textContent = "Launching...";
+            statusText.textContent = "100% - Initializing in RAM...";
+
+            // Combine chunks in memory and decode to HTML text
+            const blob = new Blob(chunks, { type: 'text/html' });
+            const htmlContent = await blob.text();
+
+            // Overwrite the current page in memory with the downloaded HTML
+            document.open();
+            document.write(htmlContent);
+            document.close();
+
+        } catch (error) {
+            titleText.textContent = "Download Failed";
+            titleText.style.color = "#ef4444";
+            statusText.textContent = error.message;
+            console.error(error);
+        }
+    }
+
+    loadIntoMemory();
+</script>
+
+</body>
+</html>
