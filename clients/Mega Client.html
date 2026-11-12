@@ -1,0 +1,120 @@
+<!-- Mega Client -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Mega Client Loader" />
+    <title>ebert's mega client</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            width: 80%;
+            max-width: 450px;
+            text-align: center;
+        }
+        .progress-bg {
+            width: 100%;
+            height: 16px;
+            background-color: #2c2c2c;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 15px 0;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+        }
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+            transition: width 0.15s ease-out;
+        }
+        #status {
+            font-size: 14px;
+            color: #a0a0a0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2 id="title">Mega Client<br><br>Loading...</h2>
+    <div class="progress-bg">
+        <div class="progress-fill" id="progress-bar"></div>
+    </div>
+    <div id="status">0% (0.00 MB)</div>
+</div>
+
+<script>
+    // Built with join() so editors cannot corrupt the URL
+    const rawUrl = [
+        "https:/",
+        "://githubusercontent.com",
+        "MilkdromedaStudios",
+        "all-of-eaglercraft",
+        "main",
+        "Mega%20Client.html"
+    ].join("/");
+
+    // ~15.6 MB fallback size (15.6 * 1024 * 1024)
+    const fallbackTotalBytes = 16357785;
+
+    function loadIntoMemory() {
+        const progressBar = document.getElementById('progress-bar');
+        const statusText = document.getElementById('status');
+        const titleText = document.getElementById('title');
+
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", rawUrl, true);
+
+        xhr.onprogress = function (event) {
+            const total = event.lengthComputable ? event.total : fallbackTotalBytes;
+            const loaded = event.loaded;
+            const percent = Math.min(Math.round((loaded / total) * 100), 100);
+            const mbLoaded = (loaded / (1024 * 1024)).toFixed(2);
+
+            progressBar.style.width = percent + '%';
+            statusText.textContent = `${percent}% (${mbLoaded} MB)`;
+        };
+
+        xhr.onload = function () {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                progressBar.style.width = '100%';
+                titleText.textContent = "Launching...";
+                statusText.textContent = "100% - Launching Minecraft";
+
+                setTimeout(() => {
+                    document.open();
+                    document.write(xhr.responseText);
+                    document.close();
+                }, 50);
+            } else {
+                titleText.textContent = "Download Failed";
+                titleText.style.color = "#ef4444";
+                statusText.textContent = `HTTP error! Status: ${xhr.status}`;
+            }
+        };
+
+        xhr.onerror = function () {
+            titleText.textContent = "Download Failed";
+            titleText.style.color = "#ef4444";
+            statusText.textContent = "Network error or blocked by preview sandbox.";
+        };
+
+        xhr.send();
+    }
+
+    loadIntoMemory();
+</script>
+
+</body>
+</html>
