@@ -871,6 +871,65 @@ async function fetchClients() {
   }
 }
 
+/* ---------------- ABOUT:BLANK CLIENT LAUNCHING ---------------- */
+
+async function openClientInBlankTab(client) {
+  // Open synchronously during the click so popup blockers allow the tab.
+  const tab = window.open("about:blank", "_blank");
+
+  if (!tab) {
+    alert("Your browser blocked the new tab. Allow pop-ups for this site and try again.");
+    return;
+  }
+
+  const relativePath = client.path.split("/")
+    .map(encodeURIComponent)
+    .join("/");
+
+  const target = location.origin +
+    CONFIG.siteBase + "/" + relativePath;
+
+  try {
+    tab.document.open();
+    tab.document.write(`<!doctype html><html><head><title>Loading ${client.name}...</title></head><body style="margin:0;background:#080d0a;color:#eff8f1;font:16px sans-serif;display:grid;place-items:center;min-height:100vh"><p>Loading ${client.name}...</p></body></html>`);
+    tab.document.close();
+
+    const response = await fetch(target, { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error("Could not load client (HTTP " + response.status + ").");
+    }
+
+    let html = await response.text();
+
+    // Preserve the client's original relative CSS, JS, image, and asset paths.
+    const baseTag = '<base href="' + target.replace(/"/g, "&quot;") + '">';
+    if (/<head\b[^>]*>/i.test(html)) {
+      html = html.replace(/<head\b[^>]*>/i, match => match + "\\n" + baseTag);
+    } else {
+      html = "<head>" + baseTag + "</head>" + html;
+    }
+
+    tab.document.open();
+    tab.document.write(html);
+    tab.document.close();
+
+    // The tab has its content; detach its opener for safety.
+    tab.opener = null;
+  } catch (error) {
+    try {
+      tab.document.open();
+      tab.document.write(
+        "<!doctype html><title>Unable to launch</title>" +
+        "<body style='font:16px sans-serif;padding:2rem'>" +
+        "<h2>Couldn't launch " + client.name.replace(/[&<>"]/g, "") + "</h2>" +
+        "<p>" + String(error.message).replace(/[&<>"]/g, "") + "</p></body>"
+      );
+      tab.document.close();
+      tab.opener = null;
+    } catch {}
+  }
+}
+
 /* ---------------- RENDER CLIENT CARDS ---------------- */
 
 function renderClients(clients) {
@@ -942,18 +1001,7 @@ function renderClients(clients) {
     launch.innerHTML = "<span>▶</span> Launch Client";
 
     launch.addEventListener("click", () => {
-      /*
-        Resolve the client path relative to the current GitHub Pages site.
-        Project sites include the repository prefix; user sites do not.
-      */
-      const relativePath = client.path.split("/")
-        .map(encodeURIComponent)
-        .join("/");
-
-      const target = location.origin +
-        CONFIG.siteBase + "/" + relativePath;
-
-      window.open(target, "_blank", "noopener,noreferrer");
+      openClientInBlankTab(client);
     });
 
     card.append(top, description, launch);
