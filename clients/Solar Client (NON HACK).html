@@ -1,0 +1,244 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1.8.8 Reduced Lag">
+<title>Solar Client Loader</title>
+<style>
+* { box-sizing: border-box; }
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    background: #1746d1;
+    color: white;
+}
+#loader {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    text-align: center;
+    z-index: 10;
+}
+#logo {
+    width: min(520px, 85vw);
+    max-height: 260px;
+    object-fit: contain;
+    margin-bottom: 28px;
+}
+#status {
+    font-size: 15px;
+    font-weight: bold;
+    margin-bottom: 12px;
+}
+#progress-container {
+    width: min(420px, 85vw);
+    height: 13px;
+    background: rgba(0,0,0,.3);
+    border-radius: 20px;
+    overflow: hidden;
+}
+#progress {
+    height: 100%;
+    width: 0%;
+    background: #ff1744;
+    border-radius: 20px;
+    transition: width .15s ease;
+}
+#details {
+    margin-top: 10px;
+    font-size: 13px;
+    opacity: .9;
+}
+#retry {
+    display: none;
+    margin-top: 22px;
+    padding: 11px 26px;
+    border: none;
+    border-radius: 7px;
+    background: #ff1744;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+#game {
+    display: none;
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: black;
+}
+</style>
+</head>
+<body>
+
+<div id="loader">
+    <img id="logo"
+        src="https://raw.githubusercontent.com/sigmapoopyman69/eaglercraft-client-launcher/main/amazing_logo.png"
+        alt="Logo">
+    <div id="status">Preparing download...</div>
+    <div id="progress-container">
+        <div id="progress"></div>
+    </div>
+    <div id="details">0.00 MB downloaded</div>
+    <button id="retry" onclick="startLoading()">Retry</button>
+</div>
+
+<iframe id="game"
+    allow="fullscreen; autoplay; clipboard-read; clipboard-write"
+    allowfullscreen></iframe>
+
+<script>
+const SOURCE = "https://raw.githubusercontent.com/MilkdromedaStudios/all-of-eaglercraft/main/Solar%20Client.html";
+
+const loader = document.getElementById("loader");
+const progressBar = document.getElementById("progress");
+const statusText = document.getElementById("status");
+const detailsText = document.getElementById("details");
+const retryButton = document.getElementById("retry");
+const gameFrame = document.getElementById("game");
+
+function formatMB(bytes) {
+    return (bytes / (1024 * 1024)).toFixed(2);
+}
+
+function updateProgress(percent, downloaded, total) {
+    progressBar.style.width = percent + "%";
+    detailsText.textContent = total
+        ? formatMB(downloaded) + " MB / " + formatMB(total) + " MB"
+        : formatMB(downloaded) + " MB downloaded";
+}
+
+function getFileSize() {
+    return new Promise(resolve => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("HEAD", SOURCE, true);
+        xhr.timeout = 12000;
+        xhr.onload = () => {
+            const length = xhr.getResponseHeader("Content-Length");
+            resolve(length ? Number(length) : null);
+        };
+        xhr.onerror = () => resolve(null);
+        xhr.ontimeout = () => resolve(null);
+        try { xhr.send(); } catch { resolve(null); }
+    });
+}
+
+async function startLoading() {
+    retryButton.style.display = "none";
+    gameFrame.style.display = "none";
+    loader.style.display = "flex";
+    gameFrame.srcdoc = "";
+    progressBar.style.width = "0%";
+    statusText.textContent = "Checking file size...";
+    detailsText.textContent = "Preparing download...";
+
+    const totalSize = await getFileSize();
+
+    statusText.textContent = "Downloading Solar Client...";
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", SOURCE, true);
+    xhr.responseType = "blob";
+    xhr.timeout = 180000;
+
+    xhr.onprogress = event => {
+        const downloaded = event.loaded;
+        const total = event.lengthComputable && event.total > 0
+            ? event.total
+            : totalSize;
+
+        if (total && total > 0) {
+            updateProgress(
+                Math.min(90, downloaded / total * 90),
+                downloaded,
+                total
+            );
+        } else {
+            detailsText.textContent =
+                formatMB(downloaded) + " MB downloaded";
+        }
+    };
+
+    xhr.onload = () => {
+        if (xhr.status < 200 || xhr.status >= 300) {
+            showError("Download failed: HTTP " + xhr.status);
+            return;
+        }
+
+        const blob = xhr.response;
+        if (!blob || blob.size === 0) {
+            showError("The downloaded file was empty.");
+            return;
+        }
+
+        updateProgress(90, blob.size, blob.size);
+        statusText.textContent = "Download complete. Processing...";
+
+        const reader = new FileReader();
+
+        reader.onload = () => {
+            const html = reader.result;
+
+            if (typeof html !== "string" || !html.length) {
+                showError("Could not read the downloaded HTML.");
+                return;
+            }
+
+            progressBar.style.width = "97%";
+            statusText.textContent = "Launching Solar Client...";
+            detailsText.textContent =
+                formatMB(blob.size) + " MB downloaded";
+
+            let launched = false;
+
+            const finishLaunch = () => {
+                if (launched) return;
+                launched = true;
+                progressBar.style.width = "100%";
+                loader.style.display = "none";
+                gameFrame.style.display = "block";
+            };
+
+            gameFrame.onload = finishLaunch;
+            gameFrame.srcdoc = html;
+
+            setTimeout(finishLaunch, 5000);
+        };
+
+        reader.onerror = () =>
+            showError("Failed to process the downloaded file.");
+
+        reader.readAsText(blob);
+    };
+
+    xhr.onerror = () =>
+        showError("Network error while downloading the client.");
+
+    xhr.ontimeout = () =>
+        showError("Download timed out. Please try again.");
+
+    try { xhr.send(); }
+    catch { showError("Could not start the download."); }
+}
+
+function showError(message) {
+    statusText.textContent = message;
+    detailsText.textContent = "Something went wrong.";
+    retryButton.style.display = "inline-block";
+}
+
+startLoading();
+</script>
+</body>
+</html>
