@@ -1,0 +1,253 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Utility Client 1.12.2">
+  <title>Astra 1.12</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #1746d1;
+      color: white;
+      font-family: Arial, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    #loader {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      text-align: center;
+    }
+
+    #logo {
+      width: min(520px, 85vw);
+      max-height: 260px;
+      object-fit: contain;
+      margin-bottom: 30px;
+    }
+
+    #status {
+      font-size: 16px;
+      margin-bottom: 12px;
+    }
+
+    .progress-container {
+      width: min(420px, 85vw);
+      height: 12px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    #progress {
+      width: 0%;
+      height: 100%;
+      background: #ff1744;
+      transition: width 0.15s ease;
+    }
+
+    #counter {
+      margin-top: 12px;
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    #retry {
+      display: none;
+      margin-top: 20px;
+      padding: 10px 24px;
+      border: none;
+      border-radius: 6px;
+      background: #ff1744;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    #gameFrame {
+      display: none;
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: black;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="loader">
+    <img
+      id="logo"
+      src="https://raw.githubusercontent.com/sigmapoopyman69/eaglercraft-client-launcher/main/amazing_logo.png"
+      alt="Logo"
+    >
+
+    <div id="status">Loading Astra 1.12...</div>
+
+    <div class="progress-container">
+      <div id="progress"></div>
+    </div>
+
+    <div id="counter">Preparing download...</div>
+
+    <button id="retry" onclick="startLoading()">Retry</button>
+  </div>
+
+  <iframe
+    id="gameFrame"
+    allow="fullscreen; autoplay; clipboard-read; clipboard-write"
+    allowfullscreen
+  ></iframe>
+
+  <script>
+    const SOURCE =
+      "https://raw.githubusercontent.com/MilkdromedaStudios/all-of-eaglercraft/main/Astra%201.12.html";
+
+    const loader = document.getElementById("loader");
+    const progress = document.getElementById("progress");
+    const status = document.getElementById("status");
+    const counter = document.getElementById("counter");
+    const retry = document.getElementById("retry");
+    const gameFrame = document.getElementById("gameFrame");
+
+    function formatMB(bytes) {
+      return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+    }
+
+    function getFileSize() {
+      return new Promise(resolve => {
+        const xhr = new XMLHttpRequest();
+
+        xhr.open("HEAD", SOURCE, true);
+
+        xhr.onload = () => {
+          const size = xhr.getResponseHeader("Content-Length");
+          resolve(size ? Number(size) : null);
+        };
+
+        xhr.onerror = () => resolve(null);
+        xhr.timeout = 10000;
+        xhr.ontimeout = () => resolve(null);
+
+        xhr.send();
+      });
+    }
+
+    function showError(message) {
+      status.textContent = message;
+      counter.textContent = "Download failed.";
+      retry.style.display = "inline-block";
+    }
+
+    async function startLoading() {
+      retry.style.display = "none";
+      progress.style.width = "0%";
+      status.textContent = "Preparing Astra 1.12...";
+      counter.textContent = "Checking file size...";
+
+      gameFrame.style.display = "none";
+      loader.style.display = "flex";
+
+      const knownSize = await getFileSize();
+
+      const xhr = new XMLHttpRequest();
+      xhr.open("GET", SOURCE, true);
+      xhr.responseType = "blob";
+
+      xhr.onprogress = event => {
+        const loaded = event.loaded;
+        const total = event.lengthComputable
+          ? event.total
+          : knownSize;
+
+        if (total && total > 0) {
+          const percent = Math.min(
+            100,
+            (loaded / total) * 100
+          );
+
+          progress.style.width = percent + "%";
+          counter.textContent =
+            percent.toFixed(1) + "% • " +
+            formatMB(loaded) + " / " +
+            formatMB(total);
+        } else {
+          counter.textContent =
+            formatMB(loaded) + " downloaded";
+        }
+
+        status.textContent = "Downloading Astra 1.12...";
+      };
+
+      xhr.onload = () => {
+        if (xhr.status < 200 || xhr.status >= 300) {
+          showError("Unable to download Astra 1.12.");
+          return;
+        }
+
+        status.textContent = "Preparing game...";
+        counter.textContent = "Loading into browser memory...";
+
+        const reader = new FileReader();
+
+        reader.onload = () => {
+          const html = reader.result;
+
+          progress.style.width = "100%";
+          status.textContent = "Launching Astra 1.12...";
+          counter.textContent = "Starting game...";
+
+          let launched = false;
+
+          const finishLaunch = () => {
+            if (launched) return;
+            launched = true;
+
+            loader.style.display = "none";
+            gameFrame.style.display = "block";
+          };
+
+          gameFrame.onload = finishLaunch;
+          gameFrame.srcdoc = html;
+
+          setTimeout(finishLaunch, 5000);
+        };
+
+        reader.onerror = () => {
+          showError("Unable to read the downloaded file.");
+        };
+
+        reader.readAsText(xhr.response);
+      };
+
+      xhr.onerror = () => {
+        showError("Network error while downloading Astra 1.12.");
+      };
+
+      xhr.onabort = () => {
+        showError("Download was interrupted.");
+      };
+
+      xhr.send();
+    }
+
+    startLoading();
+  </script>
+</body>
+</html>
