@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+  <meta name="description" content="eberts newest version" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Eaglercraft Loader</title>
+<style>
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    background: royalblue;
+    color: white;
+}
+
+#loader {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 18px;
+    background: royalblue;
+}
+
+#logo {
+    width: min(260px, 65vw);
+    max-height: 180px;
+    object-fit: contain;
+}
+
+#status, #detail {
+    text-align: center;
+}
+
+#status { font-size: 15px; }
+#detail { font-size: 12px; }
+
+#percentage {
+    font-size: 24px;
+    font-weight: bold;
+    font-variant-numeric: tabular-nums;
+}
+
+.bar-shell {
+    width: min(440px, 82vw);
+    height: 13px;
+    border-radius: 20px;
+    background: #ffffff40;
+    overflow: hidden;
+}
+
+#bar {
+    width: 0%;
+    height: 100%;
+    background: #ff1744;
+    transition: width .12s linear;
+}
+
+#retry {
+    display: none;
+    padding: 10px 20px;
+    border: 1px solid white;
+    border-radius: 8px;
+    background: transparent;
+    color: white;
+    cursor: pointer;
+}
+
+#game {
+    display: none;
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: black;
+}
+</style>
+</head>
+
+<body>
+
+<div id="loader">
+    <img id="logo"
+    src="https://raw.githubusercontent.com/sigmapoopyman69/eaglercraft-client-launcher/main/amazing_logo.png"
+    alt="Eaglercraft">
+
+    <div id="status">Downloading Eaglercraft...</div>
+
+    <div class="bar-shell">
+        <div id="bar"></div>
+    </div>
+
+    <div id="percentage">0%</div>
+    <div id="detail">Connecting to GitHub...</div>
+
+    <button id="retry">Try Again</button>
+</div>
+
+<iframe id="game"
+    title="Eaglercraft"
+    allow="fullscreen; autoplay; clipboard-read; clipboard-write"
+    allowfullscreen></iframe>
+
+<script>
+const SOURCE =
+"https://raw.githubusercontent.com/MilkdromedaStudios/all-of-eaglercraft/main/Eaglercraft%2026.3.html";
+
+const loader = document.getElementById("loader");
+const game = document.getElementById("game");
+const status = document.getElementById("status");
+const detail = document.getElementById("detail");
+const bar = document.getElementById("bar");
+const percentage = document.getElementById("percentage");
+const retry = document.getElementById("retry");
+
+function progress(value) {
+    value = Math.max(0, Math.min(100, value));
+    bar.style.width = value + "%";
+    percentage.textContent = Math.floor(value) + "%";
+}
+
+function mb(bytes) {
+    return (bytes / 1048576).toFixed(2);
+}
+
+function fail(message) {
+    status.textContent = "Couldn't load Eaglercraft";
+    detail.textContent = message;
+    retry.style.display = "block";
+}
+
+function launch(html) {
+    if (!html || html.length < 100) {
+        fail("Invalid downloaded HTML.");
+        return;
+    }
+
+    status.textContent = "Launching Eaglercraft...";
+    detail.textContent = "Preparing game...";
+    progress(97);
+
+    game.onload = function() {
+        progress(100);
+        loader.style.display = "none";
+        game.style.display = "block";
+    };
+
+    game.srcdoc = html;
+
+    setTimeout(function() {
+        if (loader.style.display !== "none") {
+            progress(100);
+            loader.style.display = "none";
+            game.style.display = "block";
+        }
+    }, 5000);
+}
+
+async function getFileSize() {
+    try {
+        const response = await fetch(SOURCE, {
+            method: "HEAD"
+        });
+
+        const size = Number(
+            response.headers.get("content-length")
+        );
+
+        return size > 0 ? size : null;
+    } catch (error) {
+        return null;
+    }
+}
+
+async function start() {
+    retry.style.display = "none";
+    status.textContent = "Checking file size...";
+    detail.textContent = "Connecting to GitHub...";
+    progress(0);
+
+    const totalSize = await getFileSize();
+
+    status.textContent = "Downloading Eaglercraft...";
+    detail.textContent = totalSize
+        ? "File size: " + mb(totalSize) + " MB"
+        : "Measuring download...";
+
+    const xhr = new XMLHttpRequest();
+
+    xhr.open("GET", SOURCE, true);
+    xhr.responseType = "blob";
+
+    xhr.onprogress = function(event) {
+        const total = event.lengthComputable
+            ? event.total
+            : totalSize;
+
+        if (total && total > 0) {
+            const percent = Math.min(
+                90,
+                (event.loaded / total) * 90
+            );
+
+            progress(percent);
+
+            detail.textContent =
+                mb(event.loaded) + " MB / " +
+                mb(total) + " MB";
+        } else {
+            detail.textContent =
+                mb(event.loaded) + " MB downloaded";
+        }
+    };
+
+    xhr.onload = function() {
+        if (xhr.status < 200 || xhr.status >= 300) {
+            fail("GitHub HTTP " + xhr.status);
+            return;
+        }
+
+        if (xhr.response.size > 0) {
+            progress(90);
+            detail.textContent =
+                mb(xhr.response.size) + " MB downloaded";
+        }
+
+        status.textContent = "Download complete!";
+        detail.textContent = "Preparing game...";
+        progress(93);
+
+        const reader = new FileReader();
+
+        reader.onload = function() {
+            launch(reader.result);
+        };
+
+        reader.onerror = function() {
+            fail("Couldn't read downloaded file.");
+        };
+
+        reader.readAsText(xhr.response);
+    };
+
+    xhr.onerror = function() {
+        fail("Network or CORS error.");
+    };
+
+    xhr.onabort = function() {
+        fail("Download interrupted.");
+    };
+
+    xhr.send();
+}
+
+retry.addEventListener("click", start);
+start();
+</script>
+
+</body>
+</html>
