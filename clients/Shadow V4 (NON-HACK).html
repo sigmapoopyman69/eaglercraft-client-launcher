@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Utility 1.8.8">
+<title>Shadow Client</title>
+<style>
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: #1746d1;
+    color: white;
+    font-family: Arial, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+#loader { width: 100%; padding: 24px; }
+.logo {
+    width: min(520px, 85vw);
+    max-height: 260px;
+    object-fit: contain;
+    margin-bottom: 24px;
+}
+h1 { margin: 0 0 12px; }
+#status { margin: 12px 0; }
+.progress-container {
+    width: min(420px, 85vw);
+    height: 12px;
+    background: rgba(0,0,0,.25);
+    border-radius: 20px;
+    margin: 18px auto;
+    overflow: hidden;
+}
+#progress {
+    height: 100%;
+    width: 0%;
+    background: #ff1744;
+    transition: width .15s linear;
+}
+#details { font-size: 14px; opacity: .9; }
+button {
+    display: none;
+    margin: 18px auto;
+    padding: 11px 24px;
+    border: 0;
+    border-radius: 6px;
+    background: #ff1744;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+iframe {
+    display: none;
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: black;
+}
+</style>
+</head>
+<body>
+<div id="loader">
+    <img class="logo"
+         src="https://raw.githubusercontent.com/sigmapoopyman69/eaglercraft-client-launcher/main/amazing_logo.png"
+         alt="Logo">
+    <h1>Shadow Client</h1>
+    <div id="status">Downloading Shadow Client...</div>
+    <div class="progress-container">
+        <div id="progress"></div>
+    </div>
+    <div id="details">Preparing download...</div>
+    <div id="error"></div>
+    <button id="retry" onclick="loadClient()">Retry</button>
+</div>
+
+<iframe id="game"
+        allow="fullscreen; autoplay; clipboard-read; clipboard-write"
+        allowfullscreen></iframe>
+
+<script>
+const SOURCE = "https://raw.githubusercontent.com/PeytonPlayz595/Shadow-4.0/main/javascript/Shadow_Client_en_US.html";
+
+const statusText = document.getElementById("status");
+const progressBar = document.getElementById("progress");
+const details = document.getElementById("details");
+const errorText = document.getElementById("error");
+const retryButton = document.getElementById("retry");
+
+function getFileSize() {
+    return new Promise(resolve => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("HEAD", SOURCE);
+        xhr.onload = () => {
+            const size = Number(xhr.getResponseHeader("Content-Length"));
+            resolve(size > 0 ? size : 0);
+        };
+        xhr.onerror = () => resolve(0);
+        xhr.send();
+    });
+}
+
+async function loadClient() {
+    retryButton.style.display = "none";
+    errorText.textContent = "";
+    progressBar.style.width = "0%";
+    details.textContent = "Preparing download...";
+    statusText.textContent = "Downloading Shadow Client...";
+
+    const totalSize = await getFileSize();
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", SOURCE);
+    xhr.responseType = "blob";
+
+    xhr.onprogress = event => {
+        const loadedMB = (event.loaded / 1048576).toFixed(2);
+
+        if (event.lengthComputable && event.total > 0) {
+            const percent = Math.round((event.loaded / event.total) * 100);
+            progressBar.style.width = percent + "%";
+            details.textContent =
+                `${percent}% • ${(event.loaded / 1048576).toFixed(2)} / ${(event.total / 1048576).toFixed(2)} MB`;
+        } else {
+            if (totalSize > 0) {
+                const percent = Math.min(99, Math.round((event.loaded / totalSize) * 100));
+                progressBar.style.width = percent + "%";
+                details.textContent =
+                    `${percent}% • ${loadedMB} / ${(totalSize / 1048576).toFixed(2)} MB`;
+            } else {
+                details.textContent = `${loadedMB} MB downloaded`;
+            }
+        }
+    };
+
+    xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+            progressBar.style.width = "100%";
+            statusText.textContent = "Starting Shadow Client...";
+            details.textContent = `${(xhr.response.size / 1048576).toFixed(2)} MB downloaded`;
+
+            const reader = new FileReader();
+            reader.onload = () => {
+                document.getElementById("loader").style.display = "none";
+                const frame = document.getElementById("game");
+                frame.style.display = "block";
+                frame.srcdoc = reader.result;
+            };
+            reader.onerror = showError;
+            reader.readAsText(xhr.response);
+        } else {
+            showError();
+        }
+    };
+
+    xhr.onerror = showError;
+    xhr.send();
+}
+
+function showError() {
+    statusText.textContent = "Failed to load Shadow Client";
+    errorText.textContent = "The download failed. Check your connection and try again.";
+    retryButton.style.display = "block";
+}
+
+loadClient();
+</script>
+</body>
+</html>
