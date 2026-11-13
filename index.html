@@ -549,10 +549,53 @@ footer {
   .hero h2 { font-size: 31px; }
   .hero-footer { font-size: 8px; }
 }
+
+/* EBERT_PASSWORD_GATE */
+body.locked .app { display: none; }
+#password-gate {
+  position: fixed; inset: 0; z-index: 99999; display: grid;
+  place-items: center; padding: 22px;
+  background: radial-gradient(ellipse at 85% 0%, #153021 0%, transparent 35%),
+              radial-gradient(ellipse at 0% 100%, #102619 0%, transparent 30%), #080d0a;
+  font-family: 'DM Sans', sans-serif; color: #eff8f1;
+}
+#password-gate .gate-card {
+  width: min(100%, 390px); padding: 30px; border: 1px solid #294834;
+  border-radius: 18px; background: linear-gradient(145deg,#122319,#0b120d);
+  box-shadow: 0 24px 80px #0009; text-align: center;
+}
+#password-gate .gate-mark { font-size: 34px; margin-bottom: 12px; }
+#password-gate h2 { margin: 0 0 8px; font: 700 24px 'Space Grotesk',sans-serif; }
+#password-gate p { color: #91a899; font-size: 12px; line-height: 1.6; }
+#password-gate input {
+  width: 100%; margin: 15px 0 10px; padding: 13px;
+  border: 1px solid #31543b; border-radius: 9px; outline: none;
+  color: #eff8f1; background: #080f0a; text-align: center;
+}
+#password-gate input:focus { border-color: #65f5a1; }
+#password-gate button {
+  width: 100%; padding: 12px; border: 1px solid #37c878;
+  border-radius: 9px; color: #07110a; background: #65f5a1;
+  font-weight: 700;
+}
+#password-gate .gate-error { min-height: 18px; color: #ff7184; }
+
 </style>
 </head>
 
-<body>
+<body class="locked">
+<div id="password-gate">
+  <div class="gate-card">
+    <div class="gate-mark">🍉</div>
+    <h2>ebertX launcher</h2>
+    <p>This launcher is password protected.<br>Enter the access password to continue.</p>
+    <form id="password-form">
+      <input id="password-input" type="password" placeholder="Enter password" autocomplete="current-password" required autofocus>
+      <button type="submit">Unlock launcher</button>
+      <p id="password-error" class="gate-error" role="alert"></p>
+    </form>
+  </div>
+</div>
 <div class="app">
 
   <header>
@@ -1044,9 +1087,29 @@ document.querySelectorAll(".nav-button").forEach(button => {
 
 
 
-/* ---------------- START ---------------- */
+/* ---------------- EBERT_PASSWORD_GATE ---------------- */
 
-fetchClients();
+// Best-effort client-side gate. This is a UI lock, not server-side access control.
+const LAUNCHER_PASSWORD = "Tilda2562!";
+const passwordForm = document.getElementById("password-form");
+const passwordInput = document.getElementById("password-input");
+const passwordError = document.getElementById("password-error");
+
+passwordForm.addEventListener("submit", event => {
+  event.preventDefault();
+  if (passwordInput.value === LAUNCHER_PASSWORD) {
+    document.body.classList.remove("locked");
+    document.getElementById("password-gate").remove();
+    passwordInput.value = "";
+    fetchClients();
+  } else {
+    passwordError.textContent = "Incorrect password. Try again.";
+    passwordInput.value = "";
+    passwordInput.focus();
+  }
+});
+
+/* ---------------- START ---------------- */
 </script>
 </body>
 </html>
