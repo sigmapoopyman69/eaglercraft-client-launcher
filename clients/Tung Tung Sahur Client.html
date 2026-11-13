@@ -1,0 +1,186 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Tung Tung 1.21.11">
+  <title>Tung Tung 1.21.11</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #1746d1;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+    .container {
+      width: 100%;
+      padding: 24px;
+      text-align: center;
+    }
+    .logo {
+      display: block;
+      width: min(520px, 85vw);
+      max-height: 260px;
+      object-fit: contain;
+      margin: 0 auto 30px;
+    }
+    #status {
+      font-size: 17px;
+      margin-bottom: 14px;
+    }
+    .progress-track {
+      width: min(420px, 85vw);
+      height: 13px;
+      margin: auto;
+      overflow: hidden;
+      border-radius: 20px;
+      background: rgba(255,255,255,.25);
+    }
+    #progress {
+      width: 0%;
+      height: 100%;
+      background: #ff1744;
+      transition: width .15s linear;
+    }
+    #details {
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    #retry {
+      display: none;
+      margin: 20px auto;
+      padding: 10px 22px;
+      border: 0;
+      border-radius: 7px;
+      background: #ff1744;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    iframe {
+      display: none;
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: black;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="loader">
+    <img class="logo"
+      src="https://raw.githubusercontent.com/sigmapoopyman69/eaglercraft-client-launcher/main/amazing_logo.png"
+      alt="Logo">
+    <div id="status">Loading Tung Tung 1.21.11...</div>
+    <div class="progress-track">
+      <div id="progress"></div>
+    </div>
+    <div id="details">Preparing download...</div>
+    <button id="retry" onclick="startLoading()">Retry</button>
+  </div>
+
+  <iframe id="game"
+    allow="fullscreen; autoplay; clipboard-read; clipboard-write"
+    allowfullscreen></iframe>
+
+  <script>
+    const SOURCE =
+      "https://raw.githubusercontent.com/MilkdromedaStudios/all-of-eaglercraft/main/TungSahur1.21.11.html";
+
+    const statusText = document.getElementById("status");
+    const details = document.getElementById("details");
+    const progress = document.getElementById("progress");
+    const retry = document.getElementById("retry");
+    const loader = document.getElementById("loader");
+    const game = document.getElementById("game");
+
+    function formatMB(bytes) {
+      return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+    }
+
+    function getFileSize() {
+      return new Promise(resolve => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("HEAD", SOURCE);
+        xhr.onload = () => {
+          const size = Number(xhr.getResponseHeader("Content-Length"));
+          resolve(size > 0 ? size : null);
+        };
+        xhr.onerror = () => resolve(null);
+        xhr.send();
+      });
+    }
+
+    async function startLoading() {
+      retry.style.display = "none";
+      progress.style.width = "0%";
+      statusText.textContent = "Loading Tung Tung 1.21.11...";
+      details.textContent = "Preparing download...";
+
+      const total = await getFileSize();
+
+      const xhr = new XMLHttpRequest();
+      xhr.open("GET", SOURCE);
+      xhr.responseType = "blob";
+
+      xhr.onprogress = event => {
+        const loaded = event.loaded;
+
+        if (event.lengthComputable && event.total > 0) {
+          const percent = Math.round((loaded / event.total) * 100);
+          progress.style.width = percent + "%";
+          details.textContent =
+            percent + "% — " + formatMB(loaded) +
+            " / " + formatMB(event.total);
+        } else if (total) {
+          const percent = Math.min(99, Math.round((loaded / total) * 100));
+          progress.style.width = percent + "%";
+          details.textContent =
+            percent + "% — " + formatMB(loaded) +
+            " / " + formatMB(total);
+        } else {
+          details.textContent = formatMB(loaded) + " downloaded";
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          progress.style.width = "100%";
+          statusText.textContent = "Starting Tung Tung 1.21.11...";
+          details.textContent = "Download complete";
+
+          const reader = new FileReader();
+          reader.onload = () => {
+            game.srcdoc = reader.result;
+            loader.style.display = "none";
+            game.style.display = "block";
+          };
+          reader.onerror = showError;
+          reader.readAsText(xhr.response);
+        } else {
+          showError();
+        }
+      };
+
+      xhr.onerror = showError;
+      xhr.send();
+    }
+
+    function showError() {
+      statusText.textContent = "Unable to load Tung Tung 1.21.11";
+      details.textContent = "The download failed. Check the source URL and try again.";
+      retry.style.display = "block";
+    }
+
+    startLoading();
+  </script>
+</body>
+</html>
