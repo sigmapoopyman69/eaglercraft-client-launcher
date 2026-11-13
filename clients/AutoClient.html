@@ -1,0 +1,242 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1.12.2 hacked">
+<title>AutoClient</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: #1746d1;
+    color: white;
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+#logo {
+    width: min(520px, 85vw);
+    max-height: 260px;
+    object-fit: contain;
+    margin-bottom: 28px;
+}
+
+#status {
+    font-size: 18px;
+    margin-bottom: 12px;
+    text-align: center;
+}
+
+.progress-container {
+    width: min(420px, 85vw);
+    height: 18px;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+#progress {
+    width: 0%;
+    height: 100%;
+    background: #ff1744;
+    transition: width 0.15s ease;
+}
+
+#details {
+    margin-top: 12px;
+    font-size: 14px;
+    text-align: center;
+}
+
+#retry {
+    display: none;
+    margin-top: 18px;
+    padding: 10px 24px;
+    border: none;
+    border-radius: 6px;
+    background: #ff1744;
+    color: white;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+#retry:hover {
+    filter: brightness(1.1);
+}
+
+#game {
+    display: none;
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: black;
+}
+</style>
+</head>
+
+<body>
+<img
+    id="logo"
+    src="https://raw.githubusercontent.com/sigmapoopyman69/eaglercraft-client-launcher/main/amazing_logo.png"
+    alt="Eaglercraft"
+>
+
+<div id="status">Loading AutoClient...</div>
+
+<div class="progress-container">
+    <div id="progress"></div>
+</div>
+
+<div id="details">Preparing download...</div>
+<button id="retry" onclick="loadClient()">Retry</button>
+
+<iframe
+    id="game"
+    allow="fullscreen; autoplay; clipboard-read; clipboard-write"
+    allowfullscreen
+></iframe>
+
+<script>
+const SOURCE =
+    "https://raw.githubusercontent.com/MilkdromedaStudios/all-of-eaglercraft/main/AutoClient.html";
+
+const statusText = document.getElementById("status");
+const progressBar = document.getElementById("progress");
+const details = document.getElementById("details");
+const retryButton = document.getElementById("retry");
+const gameFrame = document.getElementById("game");
+
+function formatMB(bytes) {
+    return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+}
+
+function getFileSize() {
+    return new Promise(resolve => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("HEAD", SOURCE, true);
+
+        xhr.onload = () => {
+            const size = Number(xhr.getResponseHeader("Content-Length"));
+            resolve(Number.isFinite(size) && size > 0 ? size : null);
+        };
+
+        xhr.onerror = () => resolve(null);
+        xhr.send();
+    });
+}
+
+function loadClient() {
+    retryButton.style.display = "none";
+    gameFrame.style.display = "none";
+    progressBar.style.width = "0%";
+
+    statusText.textContent = "Loading AutoClient...";
+    details.textContent = "Checking file size...";
+
+    getFileSize().then(totalSize => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", SOURCE, true);
+        xhr.responseType = "blob";
+
+        xhr.onprogress = event => {
+            const downloaded = event.loaded;
+
+            if (event.lengthComputable && event.total > 0) {
+                const percent = Math.min(
+                    100,
+                    (downloaded / event.total) * 100
+                );
+
+                progressBar.style.width = percent + "%";
+                details.textContent =
+                    percent.toFixed(1) + "% • " +
+                    formatMB(downloaded) + " / " +
+                    formatMB(event.total);
+            } else if (totalSize) {
+                const percent = Math.min(
+                    100,
+                    (downloaded / totalSize) * 100
+                );
+
+                progressBar.style.width = percent + "%";
+                details.textContent =
+                    percent.toFixed(1) + "% • " +
+                    formatMB(downloaded) + " / " +
+                    formatMB(totalSize);
+            } else {
+                details.textContent =
+                    formatMB(downloaded) + " downloaded";
+            }
+        };
+
+        xhr.onload = () => {
+            if (xhr.status < 200 || xhr.status >= 300) {
+                fail("Download failed (HTTP " + xhr.status + ")");
+                return;
+            }
+
+            statusText.textContent = "Preparing AutoClient...";
+            details.textContent = "Download complete. Loading game...";
+
+            const reader = new FileReader();
+
+            reader.onload = () => {
+                const html = reader.result;
+
+                let launched = false;
+
+                function launch() {
+                    if (launched) return;
+                    launched = true;
+
+                    document.body.style.padding = "0";
+                    document.body.style.display = "block";
+                    document.getElementById("logo").style.display = "none";
+                    statusText.style.display = "none";
+                    document.querySelector(".progress-container").style.display = "none";
+                    details.style.display = "none";
+                    retryButton.style.display = "none";
+
+                    gameFrame.style.display = "block";
+                }
+
+                gameFrame.onload = launch;
+                gameFrame.srcdoc = html;
+
+                setTimeout(launch, 5000);
+            };
+
+            reader.onerror = () => fail("Could not read downloaded file.");
+            reader.readAsText(xhr.response);
+        };
+
+        xhr.onerror = () => fail("Network error while downloading AutoClient.");
+        xhr.onabort = () => fail("Download was interrupted.");
+
+        xhr.send();
+    });
+}
+
+function fail(message) {
+    statusText.textContent = "Unable to load AutoClient";
+    details.textContent = message;
+    retryButton.style.display = "inline-block";
+}
+
+loadClient();
+</script>
+</body>
+</html>
