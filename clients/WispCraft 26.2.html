@@ -1,0 +1,228 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="WispCraft Eaglercraft 26.2 u2">
+  <title>WispCraft Eaglercraft 26.2 u2</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #1746d1;
+      color: white;
+      font-family: Arial, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+    }
+
+    #loader {
+      width: 100%;
+      max-width: 650px;
+    }
+
+    .logo {
+      width: min(520px, 85vw);
+      max-height: 260px;
+      object-fit: contain;
+      margin-bottom: 25px;
+    }
+
+    #status {
+      font-size: 18px;
+      margin: 12px 0;
+    }
+
+    #details {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-bottom: 18px;
+    }
+
+    .progress-container {
+      width: 100%;
+      height: 13px;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    #progress {
+      width: 0%;
+      height: 100%;
+      background: #ff1744;
+      transition: width 0.15s linear;
+    }
+
+    #retry {
+      display: none;
+      margin: 20px auto 0;
+      padding: 11px 25px;
+      border: none;
+      border-radius: 7px;
+      background: #ff1744;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    #retry:hover {
+      filter: brightness(1.1);
+    }
+
+    #game {
+      display: none;
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: black;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="loader">
+    <img
+      class="logo"
+      src="https://raw.githubusercontent.com/sigmapoopyman69/eaglercraft-client-launcher/main/amazing_logo.png"
+      alt="Logo"
+    >
+
+    <div id="status">Loading WispCraft...</div>
+    <div id="details">Preparing download...</div>
+
+    <div class="progress-container">
+      <div id="progress"></div>
+    </div>
+
+    <button id="retry" onclick="startLoading()">Retry</button>
+  </div>
+
+  <iframe
+    id="game"
+    allow="fullscreen; autoplay; clipboard-read; clipboard-write"
+    allowfullscreen
+  ></iframe>
+
+  <script>
+    const SOURCE =
+      "https://raw.githubusercontent.com/MilkdromedaStudios/all-of-eaglercraft/main/WispCraft%20Eaglercraft%2026.2%20u2.html";
+
+    const statusText = document.getElementById("status");
+    const details = document.getElementById("details");
+    const progress = document.getElementById("progress");
+    const retry = document.getElementById("retry");
+    const loader = document.getElementById("loader");
+    const game = document.getElementById("game");
+
+    function getFileSize() {
+      return new Promise(resolve => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("HEAD", SOURCE);
+        xhr.onload = () => {
+          const size = Number(xhr.getResponseHeader("Content-Length"));
+          resolve(size || 0);
+        };
+        xhr.onerror = () => resolve(0);
+        xhr.send();
+      });
+    }
+
+    async function startLoading() {
+      retry.style.display = "none";
+      progress.style.width = "0%";
+      statusText.textContent = "Loading WispCraft...";
+      details.textContent = "Checking file size...";
+      game.style.display = "none";
+      loader.style.display = "block";
+
+      const totalSize = await getFileSize();
+
+      details.textContent = "Starting download...";
+
+      const xhr = new XMLHttpRequest();
+      xhr.open("GET", SOURCE);
+      xhr.responseType = "blob";
+
+      xhr.onprogress = event => {
+        const loadedMB = (event.loaded / 1048576).toFixed(2);
+
+        if (event.lengthComputable && event.total > 0) {
+          const percent = Math.round(
+            (event.loaded / event.total) * 100
+          );
+
+          progress.style.width = percent + "%";
+          details.textContent =
+            `${percent}% · ${loadedMB} MB downloaded`;
+        } else if (totalSize > 0) {
+          const percent = Math.min(
+            99,
+            Math.round((event.loaded / totalSize) * 100)
+          );
+
+          progress.style.width = percent + "%";
+          details.textContent =
+            `${percent}% · ${loadedMB} MB downloaded`;
+        } else {
+          details.textContent = `${loadedMB} MB downloaded`;
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status < 200 || xhr.status >= 300) {
+          showError("Download failed: HTTP " + xhr.status);
+          return;
+        }
+
+        statusText.textContent = "Starting WispCraft...";
+        details.textContent = "Preparing game...";
+
+        const reader = new FileReader();
+
+        reader.onload = () => {
+          progress.style.width = "100%";
+          loader.style.display = "none";
+          game.style.display = "block";
+          game.srcdoc = reader.result;
+        };
+
+        reader.onerror = () => {
+          showError("Could not read the downloaded game.");
+        };
+
+        reader.readAsText(xhr.response);
+      };
+
+      xhr.onerror = () => {
+        showError("Network error. Could not download WispCraft.");
+      };
+
+      xhr.onabort = () => {
+        showError("Download was interrupted.");
+      };
+
+      xhr.send();
+    }
+
+    function showError(message) {
+      statusText.textContent = "WispCraft failed to load";
+      details.textContent = message;
+      retry.style.display = "inline-block";
+    }
+
+    startLoading();
+  </script>
+</body>
+</html>
