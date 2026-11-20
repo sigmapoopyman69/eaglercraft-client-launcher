@@ -620,7 +620,7 @@ body.locked .app { display: none; }
       <div class="side-heading">WORKSPACE</div>
 
       <button class="nav-button active" data-view="home">
-        <span>⌂</span> Overview
+        <span>⌂</span> ebert\'s clients
       </button>
 
       <button class="nav-button" data-view="clients">
@@ -654,6 +654,7 @@ body.locked .app { display: none; }
       </section>
 
       <section id="library">
+        <div id="all-clients-warning" class="message" hidden>placeholder55</div>
         <div class="toolbar">
           <div>
             <div class="eyebrow">V1.2</div>
@@ -708,6 +709,12 @@ const REPO_OWNER = "";
 const REPO_NAME = "";
 const REPO_BRANCH = "main";
 const CLIENTS_FOLDER = "clients";
+
+// Public repository used by the All Clients tab.
+const ALL_CLIENTS_OWNER = "MilkdromedaStudios";
+const ALL_CLIENTS_REPO = "all-of-eaglercraft";
+const ALL_CLIENTS_BRANCH = "main";
+let allClientsCache = null;
 
 /* ---------------- GITHUB REPOSITORY DETECTION ---------------- */
 
@@ -915,6 +922,89 @@ async function fetchClients() {
   }
 }
 
+/* ---------------- ALL CLIENTS REPOSITORY ---------------- */
+
+async function fetchAllClients() {
+  const grid = document.getElementById("grid");
+  const status = document.getElementById("scan-status");
+  const count = document.getElementById("count");
+
+  grid.innerHTML = '<div class="message"><div class="spinner"></div>Loading all clients...</div>';
+
+  try {
+    if (!allClientsCache) {
+      const treeURL =
+        "https://api.github.com/repos/" +
+        ALL_CLIENTS_OWNER + "/" + ALL_CLIENTS_REPO +
+        "/git/trees/" + encodeURIComponent(ALL_CLIENTS_BRANCH) + "?recursive=1";
+
+      const response = await fetch(treeURL, {
+        headers: { "Accept": "application/vnd.github+json" }
+      });
+
+      if (!response.ok) {
+        throw new Error("GitHub returned HTTP " + response.status + " while listing the repository.");
+      }
+
+      const tree = await response.json();
+      if (!Array.isArray(tree.tree)) {
+        throw new Error("GitHub did not return a repository file list.");
+      }
+
+      allClientsCache = tree.tree
+        .filter(item => item.type === "blob" && /\.html?$/i.test(item.path))
+        .map((item, index) => {
+          const parts = item.path.split("/");
+          const filename = parts[parts.length - 1];
+          const rawURL =
+            "https://raw.githubusercontent.com/" +
+            ALL_CLIENTS_OWNER + "/" + ALL_CLIENTS_REPO + "/" +
+            encodeURIComponent(ALL_CLIENTS_BRANCH) + "/" +
+            item.path.split("/").map(encodeURIComponent).join("/");
+
+          return {
+            name: filename.replace(/\.html?$/i, "")
+              .replace(/[-_]+/g, " ")
+              .replace(/\b\w/g, char => char.toUpperCase()),
+            path: item.path,
+            url: rawURL,
+            version: "Version unknown",
+            description: "HTML client",
+            icon: ["◈", "✦", "◉", "◇", "✧", "⬡"][index % 6]
+          };
+        })
+        .sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    status.textContent = allClientsCache.length + " CLIENT" +
+      (allClientsCache.length === 1 ? "" : "S") + " FOUND IN REPOSITORY";
+    count.textContent = allClientsCache.length;
+    renderClients(allClientsCache);
+    setupSearch(allClientsCache);
+  } catch (error) {
+    status.textContent = "CONNECTION ERROR";
+    grid.innerHTML = "";
+
+    const message = document.createElement("div");
+    message.className = "message";
+
+    const heading = document.createElement("strong");
+    heading.textContent = "Couldn't load the All Clients repository.";
+
+    const details = document.createElement("p");
+    details.textContent = error.message;
+
+    const retry = document.createElement("button");
+    retry.className = "launch";
+    retry.textContent = "↻ Retry";
+    retry.style.maxWidth = "180px";
+    retry.addEventListener("click", fetchAllClients);
+
+    message.append(heading, details, retry);
+    grid.append(message);
+  }
+}
+
 /* ---------------- ABOUT:BLANK CLIENT LAUNCHING ---------------- */
 
 async function openClientInBlankTab(client) {
@@ -930,8 +1020,8 @@ async function openClientInBlankTab(client) {
     .map(encodeURIComponent)
     .join("/");
 
-  const target = location.origin +
-    CONFIG.siteBase + "/" + relativePath;
+  const target = client.url || (location.origin +
+    CONFIG.siteBase + "/" + relativePath);
 
   try {
     tab.document.open();
@@ -1076,12 +1166,21 @@ document.querySelectorAll(".nav-button").forEach(button => {
     library.hidden = view === "about";
     about.hidden = view !== "about";
 
+    const warning = document.getElementById("all-clients-warning");
+    const search = document.getElementById("search");
+
     if (view === "clients") {
       document.getElementById("section-title").childNodes[0].textContent =
         "All Clients ";
+      warning.hidden = false;
+      search.placeholder = "Search all clients...";
+      fetchAllClients();
     } else if (view === "home") {
       document.getElementById("section-title").childNodes[0].textContent =
-        "Available Clients ";
+        "ebert's clients ";
+      warning.hidden = true;
+      search.placeholder = "Search clients...";
+      fetchClients();
     }
   });
 });
